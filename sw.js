@@ -1,5 +1,5 @@
 /* Tau Pore (phone) offline cache. Bump VERSION whenever any cached file changes so phones pick up the new copy. */
-const VERSION = "tau-pore-phone-v5";
+const VERSION = "tau-pore-phone-v6";
 const ASSETS = ["./", "index.html", "manifest.webmanifest", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png"];
 
 self.addEventListener("install", e => {
