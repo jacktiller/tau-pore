@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tau Pore">
+<meta name="description" content="A one-minute cartoon story about tau at the nuclear pore, with a short quiz.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<meta name="theme-color" content="#0b1220">
+<title>Tau at the nuclear pore</title>
+<style>
+:root{
+  --bg:#0b1220; --panel:#131c2e; --panel2:#1a2540; --ink:#f3f6fb; --muted:#a9b6cc;
+  --pos:#4c8dff; --neg:#f0564a; --r:#b39cff; --gold:#f2b417; --pink:#ff7fb6; --line:#2a3757; --green:#7ddc8a;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  overflow:hidden;touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+#app{position:fixed;inset:0;display:flex;flex-direction:column;
+  padding:max(8px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));
+  background:radial-gradient(700px 520px at 85% -8%,#1b2b52 0%,transparent 62%),radial-gradient(600px 500px at -15% 108%,#2a1530 0%,transparent 58%),var(--bg)}
+/* header: brand, step count, progress bar */
+.top{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;height:34px}
+.brand{font-size:16px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.brand b{color:var(--ink)}
+.count{font-size:16px;color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums}
+.bars{flex:0 0 auto;display:flex;gap:4px;height:6px;margin:2px 0 8px}
+.bar{flex:1;border-radius:3px;background:#33415f;transition:background .3s}
+.bar.done{background:#6d7fa6}.bar.on{background:var(--ink)}
+.chrome-off .top,.chrome-off .bars,.chrome-off footer,.chrome-off .hint{display:none}
+main{position:relative;flex:1 1 auto;min-height:0;overflow:hidden}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transform:translateX(24px);transition:opacity .35s,transform .35s;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.screen.on{opacity:1;pointer-events:auto;transform:none}
+.screen.left{transform:translateX(-24px)}
+h1{font-size:clamp(25px,7.6vw,34px);line-height:1.1;margin:4px 0 8px;font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(25px,7.2vw,32px);line-height:1.12;margin:4px 0 10px;font-weight:800;letter-spacing:-.02em}
+.sub{font-size:18px;line-height:1.35;color:#d4ddeb;margin:0 0 8px}
+.sub b{color:var(--ink)}
+.muted{color:var(--muted)}
+footer{flex:0 0 auto;display:flex;align-items:center;gap:12px;padding-top:6px}
+.btn{min-height:56px;min-width:56px;padding:0 22px;border-radius:16px;border:2px solid #3a4a70;background:var(--panel2);color:var(--ink);
+  font-weight:700;font-size:19px;line-height:1;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;transition:transform .12s,background .2s,border-color .2s;text-decoration:none}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:#f3f6fb;color:#0b1220;border-color:#f3f6fb}
+.btn.ghost{background:transparent}
+.btn[disabled]{opacity:.3;pointer-events:none}
+#back{flex:0 0 31%}
+#next{flex:1}
+.hint{flex:0 0 auto;text-align:center;font-size:16px;color:var(--muted);height:24px;opacity:0;transition:opacity .6s}
+.hint.show{opacity:1}
+.pulse{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(243,246,251,.5)}50%{box-shadow:0 0 0 10px rgba(243,246,251,0)}}
+svg text{font-family:inherit}
+.shot *{transition:none!important;animation:none!important}
+/* story layout: text on top, drawing fills the rest (side by side in landscape) */
+.story{flex:1;min-height:0;display:flex;flex-direction:column;align-items:stretch;text-align:center}
+.story .txt{flex:0 0 auto}
+.story svg.scene{flex:1 1 0;min-height:0;width:100%;display:block}
+.lab{font-size:19px;font-weight:700;fill:#a9b6cc}
+.halo{paint-order:stroke;stroke:#0b1220;stroke-width:5px;stroke-linejoin:round}
+.tauS{fill:none;stroke:var(--r);stroke-width:9;stroke-linecap:round}
+.tauGrip{fill:none;stroke:#d9ccff;stroke-width:13;stroke-linecap:round}
+.phos circle{fill:var(--gold);stroke:#0b1220;stroke-width:2}
+.phos text{font-size:15px;font-weight:900;fill:#0b1220;text-anchor:middle}
+.tauW{transform-box:fill-box;transform-origin:center}
+.screen.resetting *{transition:none!important;animation:none!important}
+/* opener cartoons */
+.syn{fill:#f2cf6b;filter:drop-shadow(0 0 5px #f2cf6b)}
+.o1 .syn{animation:twinkle 2.4s ease-in-out infinite}
+@keyframes twinkle{50%{opacity:.55}}
+.o2 .plug{transform:scale(0);transform-box:fill-box;transform-origin:center;transition:transform .45s cubic-bezier(.2,1.6,.4,1)}
+.o2.play .plug{transform:scale(1)}
+.o2 .leak circle{opacity:0;transition:opacity .4s}
+.o2.play .leak circle{opacity:1}
+.o2 .dnaW{transition:opacity 1s 1.2s}.o2 .dnaB{opacity:0;transition:opacity 1s 1.2s}
+.o2.play .dnaW{opacity:0}.o2.play .dnaB{opacity:.85}
+.o2 .syn,.o2 .dend{transition:opacity 1.4s 2.2s}
+.o2.play .syn{opacity:.08}.o2.play .dend{opacity:.35}
+.o2 .tag{opacity:0;transition:opacity .6s}
+.o2.play .tag1{opacity:1;transition-delay:.9s}.o2.play .tag2{opacity:1;transition-delay:1.6s}.o2.play .tag3{opacity:1;transition-delay:3.2s}
+/* S1: tau drops onto the microtubule */
+.s1 .tauW{transform:translateY(-90px);opacity:0;transition:transform .9s cubic-bezier(.2,.9,.3,1.2),opacity .5s}
+.s1.play .tauW{transform:none;opacity:1}
+.s1.play .tauW.t2{transition-delay:.2s}
+/* S2: phosphates pop, tau lets go */
+.s2 .phos{transform:scale(0);transform-box:fill-box;transform-origin:center;transition:transform .45s cubic-bezier(.2,1.6,.4,1)}
+.s2.play .phos{transform:scale(1);transition-delay:.5s}
+.s2 .tauW{transition:transform 1.4s cubic-bezier(.4,0,.2,1) 1.3s,opacity 1.4s 1.3s}
+.s2.play .tauW.t1{transform:translate(18px,-190px) rotate(-8deg);opacity:.95}
+.s2.play .tauW.t2{transform:translate(-18px,-215px) rotate(6deg);opacity:.95}
+.s2 .letgo{opacity:0;transition:opacity .6s 2.4s}.s2.play .letgo{opacity:1}
+/* S3: tau drifts down into the pore gel */
+.s3 .traveler{transform:translateY(-140px);opacity:0;transition:transform 2.4s cubic-bezier(.45,0,.2,1) .3s,opacity .6s .3s}
+.s3.play .traveler{transform:none;opacity:1}
+.s3 .gel path{animation:gel 2.6s ease-in-out infinite}
+.s3 .gel path:nth-child(2n){animation-duration:3.1s}.s3 .gel path:nth-child(3n){animation-duration:2.2s}
+@keyframes gel{50%{transform:translateY(4px)}}
+.s3 .glow{opacity:0;transition:opacity .8s 2.5s}.s3.play .glow{opacity:.55}
+.s3 .tl{opacity:0;transition:opacity .6s 2.6s}.s3.play .tl{opacity:1}
+/* S4: charge puzzle, two beats */
+.heads{position:relative;flex:0 0 auto;height:138px;width:100%}
+.heads>div{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;transition:opacity .5s}
+.heads .h2b{opacity:0}
+.s4.beat2 .h1b{opacity:0}.s4.beat2 .h2b{opacity:1}
+.s4 .b2{opacity:0;transition:opacity .5s}
+.s4.beat2 .b2{opacity:1}
+.s4.beat2 .dimOn2{opacity:.22}
+.s4 .b2 .phos{transform:scale(0);transform-box:fill-box;transform-origin:center;transition:transform .45s cubic-bezier(.2,1.6,.4,1)}
+.s4.beat2 .b2 .phos{transform:scale(1)}
+.s4 .dimOn2{transition:opacity .5s}
+.s4 .link .lk{stroke:#e6ecf7;stroke-width:3.5;stroke-linecap:round;stroke-dasharray:2 10;fill:none;animation:lkflow 1.6s linear infinite}
+@keyframes lkflow{to{stroke-dashoffset:-24}}
+.s4 .link{opacity:0;transition:opacity .7s .35s}
+.s4.play .link{opacity:1}
+.s4.play.beat2 .link{opacity:0}
+.s4 .link .glowN,.s4 .link .glowT{animation:lkglow 2.4s ease-in-out infinite}
+@keyframes lkglow{50%{opacity:.18}}
+/* takeaway */
+.take{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px}
+.take .kick{font-size:16px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.take h1{font-size:clamp(30px,9vw,40px);margin:4px 0}
+.take svg{width:100%;max-width:420px;height:auto;max-height:34vh}
+.thanks{font-size:24px;font-weight:800;background:linear-gradient(90deg,var(--pos),var(--r),var(--neg));-webkit-background-clip:text;background-clip:text;color:transparent;margin-top:6px}
+/* landing */
+.landing{align-items:center;justify-content:center;text-align:center;gap:10px;padding:4px 0 8px}
+.landing svg{width:100%;max-width:340px;height:auto;max-height:28vh}
+.landing h1{font-size:clamp(34px,10.4vw,46px);margin:6px 0 2px}
+.landing .sub{font-size:19px;color:var(--muted);max-width:340px;margin:0 auto 6px}
+.landing .btn{min-height:64px;font-size:22px;padding:0 44px;margin-top:6px;width:100%;max-width:340px}
+.landing .by{font-size:16px;color:var(--muted);margin-top:6px}
+.float{animation:float 3.2s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-6px)}}
+.ringp{animation:ringp 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes ringp{50%{transform:scale(1.04);opacity:.85}}
+/* cards (why it matters, about) */
+.pad{padding:2px 2px 20px}
+.card{background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:10px}
+.card .big{font-size:36px;font-weight:900;line-height:1;letter-spacing:-.02em;background:linear-gradient(90deg,#9cc0ff,var(--r));-webkit-background-clip:text;background-clip:text;color:transparent}
+.card .big.sm{font-size:28px;line-height:1.05}
+.card p{margin:6px 0 2px;font-size:17px;line-height:1.35;color:#d4ddeb}
+.src{display:inline-flex;align-items:center;min-height:44px;font-size:16px;color:#9cc0ff;text-decoration:underline;text-underline-offset:3px;font-weight:600}
+.note{font-size:16px;color:var(--muted);margin:2px 0 6px;line-height:1.35}
+/* quiz */
+.qtop{display:flex;justify-content:space-between;align-items:center;font-size:16px;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.qq{font-size:clamp(22px,6.2vw,27px);line-height:1.2;font-weight:800;margin:8px 0 4px}
+.opt{display:block;width:100%;min-height:58px;padding:12px 16px;text-align:left;font-weight:700;font-size:18px;line-height:1.25;font-family:inherit;border-radius:16px;border:2px solid #3a4a70;background:var(--panel2);color:var(--ink);margin-top:10px;cursor:pointer;transition:transform .12s,background .2s,border-color .2s}
+.opt:active{transform:scale(.98)}
+.opt.right{border-color:#5fd38a;background:#12351f}
+.opt.wrong{border-color:var(--neg);background:#3a1a1c}
+.opt[disabled]{pointer-events:none}
+.opt.faded{opacity:.5}
+.fb{margin-top:12px;padding:12px 14px;border-radius:14px;font-size:17px;line-height:1.35;background:var(--panel);border:2px solid var(--line);display:none}
+.fb.show{display:block}
+.fb.good{border-color:#5fd38a}.fb.try{border-color:#f2b417}
+.score{font-size:56px;font-weight:900;line-height:1;margin:6px 0}
+/* about */
+.me{display:flex;gap:14px;align-items:center}
+.avatar{flex:0 0 64px;width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#4c8dff,#b39cff);color:#0b1220;font-weight:900;font-size:24px;display:flex;align-items:center;justify-content:center}
+.me .nm{font-size:24px;font-weight:800;line-height:1.1}
+.me .rl{font-size:16px;color:var(--muted);line-height:1.3;margin-top:3px}
+.clink,.rd{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:8px 12px;margin-top:6px;min-height:52px}
+.clink .ico,.rd .ico{flex:0 0 36px;width:36px;height:36px;border-radius:10px;background:var(--panel2);color:#9cc0ff;display:flex;align-items:center;justify-content:center}
+.clink .ico svg,.rd .ico svg{width:18px;height:18px;fill:currentColor}
+.clink .txt,.rd .txt{min-width:0;flex:1}
+.clink b,.rd b{display:block;font-size:17px;line-height:1.2;color:#9cc0ff}
+.clink span,.rd span{display:block;font-size:16px;color:var(--muted);line-height:1.25;margin-top:2px;word-break:break-word}
+.acts{display:flex;gap:10px;margin-top:10px}
+.acts .btn{flex:1}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001s!important;animation-iteration-count:1!important}}
+/* narrow phones */
+@media (max-width:374px){.btn{font-size:18px;padding:0 14px}.sub{font-size:17px}.heads{height:150px}}
+/* landscape (and short) screens: text left, drawing right, tighter chrome */
+@media (orientation:landscape) and (max-height:520px){
+  #app{padding-top:max(4px,env(safe-area-inset-top));padding-bottom:max(4px,env(safe-area-inset-bottom))}
+  .bars{margin:2px 0 4px}
+  h1{font-size:26px;margin:2px 0 6px}h2{font-size:26px}
+  .btn{min-height:48px}
+  .story{flex-direction:row;align-items:center;gap:12px;text-align:left}
+  .story .txt{flex:0 0 40%}
+  .story svg.scene{height:100%;flex:1 1 0}
+  .heads{height:auto;min-height:0;flex:0 0 40%;width:auto;display:grid}.heads>div{position:static;grid-area:1/1}
+  .top{display:none}.lab{font-size:25px}
+  footer{padding-top:4px}.btn{min-height:44px;font-size:18px}
+  .hint{display:none}
+  .landing{flex-direction:row;flex-wrap:wrap;gap:6px 18px;align-content:center}
+  .landing svg{flex:0 0 36%;max-height:44vh}
+  .landing .tx{flex:1 1 44%;text-align:left}
+  .landing .btn{width:auto}
+  .take svg{max-height:30vh}
+  .take h1{font-size:28px}
+  .score{font-size:44px}
+}
+/* a little more room on big-ish phones */
+@media (min-width:410px) and (orientation:portrait){.sub{font-size:19px}}
+@media (min-width:520px) and (orientation:portrait){#app{padding-left:max(48px,env(safe-area-inset-left));padding-right:max(48px,env(safe-area-inset-right))}}
+</style>
+</head>
+<body>
+<div id="app" class="chrome-off">
+  <div class="top"><div class="brand"><b>Tau</b> Pore</div><div class="count" id="count" aria-live="polite"></div></div>
+  <div class="bars" id="bars" aria-hidden="true"></div>
+  <main id="main">
+
+    <!-- 0 LANDING -->
+    <section class="screen landing" aria-label="Start">
+      <svg viewBox="0 0 360 190" aria-hidden="true">
+        <g class="ringp"><circle cx="262" cy="98" r="64" fill="none" stroke="#7ddc8a" stroke-width="12"/></g>
+        <g class="float">
+          <path d="M18,128 C52,84 86,158 128,118 S200,66 286,106" fill="none" stroke="#b39cff" stroke-width="13" stroke-linecap="round"/>
+          <path d="M128,118 S168,86 214,96" fill="none" stroke="#d9ccff" stroke-width="16" stroke-linecap="round" opacity=".9"/>
+          <g class="phos"><circle cx="150" cy="82" r="17"/><text x="150" y="89" style="font-size:20px">P</text></g>
+        </g>
+      </svg>
+      <div class="tx">
+        <h1>Tau at the<br>nuclear pore</h1>
+        <p class="sub">A one-minute cartoon about a brain protein that gets stuck, plus a quick quiz.</p>
+        <button class="btn primary" id="start">Start ▶</button>
+        <div class="by">Jack Tiller · UTMB</div>
+        <div class="by" style="margin-top:2px">Tap the sides, swipe, or use the buttons.</div>
+      </div>
+    </section>
+
+    <!-- 1 HEALTHY NEURON -->
+    <section class="screen o1" data-tapnav>
+      <div class="story">
+        <div class="txt"><h1 style="color:#d4ddeb">A healthy brain cell</h1></div>
+        <svg class="scene" id="neuron1" viewBox="0 0 360 440" role="img" aria-label="Healthy neuron with an intact nucleus"></svg>
+      </div>
+    </section>
+
+    <!-- 2 NUCLEUS FAILS -->
+    <section class="screen o2" data-tapnav>
+      <div class="story">
+        <div class="txt"><h1 style="color:#d4ddeb">In Alzheimer’s, its <span style="color:#f0564a">nucleus fails</span></h1></div>
+        <svg class="scene" id="neuron2" viewBox="0 0 360 440" role="img" aria-label="Alzheimer's neuron: jammed pores, a leaky nucleus, and fading connections"></svg>
+      </div>
+    </section>
+
+    <!-- 3 TAU HOLDS MICROTUBULES -->
+    <section class="screen s1" data-tapnav>
+      <div class="story">
+        <div class="txt"><h1><span style="color:var(--r)">Tau</span> holds microtubules together.</h1></div>
+        <svg class="scene" viewBox="0 0 360 420" role="img" aria-label="Tau sitting on a microtubule">
+          <g id="mt1"></g><g class="taus"></g>
+          <text x="180" y="410" text-anchor="middle" class="lab">microtubule</text>
+          <text x="95" y="226" text-anchor="middle" class="lab" style="fill:#cdb9ff">tau</text>
+        </svg>
+      </div>
+    </section>
+
+    <!-- 4 PHOSPHATES -->
+    <section class="screen s2" data-tapnav>
+      <div class="story">
+        <div class="txt"><h1><span style="color:var(--gold)">Phosphates</span> make tau let go.</h1>
+          <p class="sub letgo" style="color:var(--gold);font-weight:700;margin:0">P = phosphate, added to a serine</p></div>
+        <svg class="scene" viewBox="0 0 360 420" role="img" aria-label="Phosphates make tau let go of the microtubule">
+          <g id="mt2"></g><g class="taus"></g>
+          <text x="180" y="410" text-anchor="middle" class="lab">microtubule</text>
+        </svg>
+      </div>
+    </section>
+
+    <!-- 5 THE PORE -->
+    <section class="screen s3" data-tapnav>
+      <div class="story">
+        <div class="txt"><h1>Tau drifts to the <span style="color:var(--green)">nuclear pore</span>… and sticks.</h1></div>
+        <svg class="scene" viewBox="0 0 360 430" role="img" aria-label="Tau sticks inside a nuclear pore"><g transform="translate(0,64)">
+          <defs><linearGradient id="nucfade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14283a"/><stop offset=".55" stop-color="#14283a"/><stop offset="1" stop-color="#14283a" stop-opacity="0"/></linearGradient></defs>
+          <path d="M0,235 Q180,165 360,235 L360,370 L0,370Z" fill="url(#nucfade)"/>
+          <path d="M0,235 Q180,165 360,235" fill="none" stroke="#7ddc8a" stroke-width="7"/>
+          <rect x="116" y="170" width="128" height="62" fill="#14283a"/>
+          <rect x="101" y="168" width="26" height="64" rx="8" fill="#3b4b6c"/>
+          <rect x="233" y="168" width="26" height="64" rx="8" fill="#3b4b6c"/>
+          <ellipse class="glow" cx="180" cy="200" rx="66" ry="56" fill="#7ddc8a"/>
+          <g class="gel" stroke="#7ddc8a" stroke-width="3.5" fill="none" stroke-linecap="round" opacity=".9">
+            <path d="M126,178 q12,-8 24,0 t24,0 t24,0 t24,0 t24,0"/>
+            <path d="M126,192 q12,-8 24,0 t24,0 t24,0 t24,0 t24,0"/>
+            <path d="M126,206 q12,-8 24,0 t24,0 t24,0 t24,0 t24,0"/>
+            <path d="M126,220 q12,-8 24,0 t24,0 t24,0 t24,0 t24,0"/>
+          </g>
+          <g class="traveler"><g transform="translate(180,168)">
+            <path class="tauS" d="M0,-90 C24,-65 -24,-45 0,-20 S24,25 0,45"/>
+            <g class="phos"><circle cx="1" cy="-58" r="12"/><text x="1" y="-53">P</text></g>
+            <g class="phos"><circle cx="1" cy="-12" r="12"/><text x="1" y="-7">P</text></g>
+          </g></g>
+          <text class="lab tl" x="204" y="92" style="fill:#cdb9ff">tau</text>
+          <text class="lab" x="12" y="158" style="fill:#9fe3a9">nuclear</text><text class="lab" x="12" y="180" style="fill:#9fe3a9">pore →</text>
+          <text class="lab" x="348" y="158" text-anchor="end" style="fill:#9fe3a9">Nup98</text><text class="lab" x="348" y="180" text-anchor="end" style="fill:#9fe3a9">← gel</text>
+          <text x="180" y="318" text-anchor="middle" class="lab" style="fill:#9fe3a9">nucleus</text>
+        </g></svg>
+      </div>
+    </section>
+
+    <!-- 6 CHARGE QUESTION (two taps) -->
+    <section class="screen s4" data-tapnav>
+      <div class="story">
+        <div class="heads">
+          <div class="h1b"><h1>Both are <span style="color:var(--pos)">positive</span> (+ +).</h1>
+            <p class="sub" style="font-size:21px;color:var(--ink);font-weight:700">Like charges repel… so why do they stick?</p></div>
+          <div class="h2b"><h1><i>Where</i> the phosphates sit matters.</h1>
+            <p class="sub">Same kind of charge, different place, different effect.</p></div>
+        </div>
+        <svg class="scene" viewBox="0 0 360 392" role="img" aria-label="Tau and Nup98 are both positively charged, yet they stick. Where the phosphates sit matters.">
+          <text x="20" y="52" class="lab" style="fill:#cdb9ff">tau</text>
+          <rect x="20" y="62" width="320" height="48" rx="12" fill="#2c3651"/>
+          <rect x="187" y="62" width="99" height="48" fill="var(--pos)"/>
+          <text x="236" y="95" text-anchor="middle" style="font-size:24px;font-weight:900;fill:#0b1220">+ + +</text>
+          <text x="236" y="52" text-anchor="middle" class="lab" style="fill:#9cc0ff">the grip (+)</text>
+          <!-- beat 2 -->
+          <g class="b2">
+            <g class="phos"><circle cx="121" cy="86" r="12"/><text x="121" y="92" style="font-size:16px">P</text></g>
+            <g class="phos"><circle cx="145" cy="86" r="12"/><text x="145" y="92" style="font-size:16px">P</text></g>
+            <g class="phos"><circle cx="169" cy="86" r="12"/><text x="169" y="92" style="font-size:16px">P</text></g>
+            <g class="phos"><circle cx="310" cy="86" r="12"/><text x="310" y="92" style="font-size:16px">P</text></g>
+            <path d="M26,120 H74 M26,120 v-4 M74,120 v-4" stroke="#a9b6cc" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <path d="M118,120 H172 M118,120 v-4 M172,120 v-4" stroke="#f2b417" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <text x="20" y="156" style="font-size:18px;font-weight:800;fill:#a9b6cc">extra charge</text>
+            <text x="20" y="178" style="font-size:18px;font-weight:800;fill:#a9b6cc">at the far end</text>
+            <text x="20" y="206" style="font-size:18px;font-weight:800;fill:#c9d4e6">→ no change</text>
+            <text x="340" y="156" text-anchor="end" style="font-size:18px;font-weight:800;fill:#f2b417">phosphates beside</text>
+            <text x="340" y="178" text-anchor="end" style="font-size:18px;font-weight:800;fill:#f2b417">the grip</text>
+            <text x="340" y="206" text-anchor="end" style="font-size:18px;font-weight:800;fill:#ffd36b">→ changes sticking</text>
+          </g>
+          <!-- Nup98 bar -->
+          <g class="dimOn2">
+            <rect x="20" y="286" width="320" height="48" rx="12" fill="#2d3b5a"/>
+            <rect x="20" y="286" width="320" height="48" rx="12" fill="var(--pos)" opacity=".18"/>
+            <g style="font-size:24px;font-weight:900;fill:#8fb2ee" text-anchor="middle">
+              <text x="68" y="318">+</text><text x="154" y="318">+</text><text x="247" y="318">+</text><text x="311" y="318">+</text></g>
+            <text x="20" y="362" class="lab" style="fill:#9fe3a9">Nup98 (the pore barrier)</text>
+            <text x="20" y="384" style="font-size:17px;fill:#9fb0cc">barely charged (+)</text>
+          </g>
+          <!-- beat 1: linked but same charge -->
+          <g class="link dimOn2">
+            <rect class="glowT" x="183" y="58" width="107" height="56" rx="14" fill="none" stroke="#7ddc8a" stroke-width="4" opacity=".55"/>
+            <rect class="glowN" x="183" y="282" width="107" height="56" rx="14" fill="none" stroke="#7ddc8a" stroke-width="4" opacity=".55"/>
+            <path class="lk" d="M208,120 V280"/><path class="lk" d="M264,120 V280"/>
+            <rect x="96" y="170" width="248" height="66" rx="33" fill="#0e1628" stroke="#7ddc8a" stroke-width="2.5"/>
+            <text x="220" y="199" text-anchor="middle" style="font-size:21px;font-weight:800;fill:#f3f6fb">they stick. How?</text>
+            <text x="220" y="222" text-anchor="middle" style="font-size:16px;font-weight:600;fill:#a9b6cc">+ and + should push apart</text>
+          </g>
+        </svg>
+      </div>
+    </section>
+
+    <!-- 7 TAKEAWAY -->
+    <section class="screen s5" data-tapnav>
+      <div class="take">
+        <div class="kick">The takeaway</div>
+        <h1>It’s not just <i>how much</i> charge. It’s <span style="color:var(--pink)">where</span>.</h1>
+        <svg viewBox="0 0 360 170" role="img" aria-label="Two bars with the same number of plus signs in different places">
+          <rect x="20" y="22" width="320" height="38" rx="10" fill="#2c3651"/>
+          <g style="font-size:26px;font-weight:900;fill:#4c8dff" text-anchor="middle"><text x="40" y="51">+</text><text x="68" y="51">+</text><text x="96" y="51">+</text><text x="124" y="51">+</text></g>
+          <rect x="20" y="92" width="320" height="38" rx="10" fill="#2c3651"/>
+          <g style="font-size:26px;font-weight:900;fill:#ff7fb6" text-anchor="middle"><text x="206" y="121">+</text><text x="234" y="121">+</text><text x="262" y="121">+</text><text x="290" y="121">+</text></g>
+          <text x="180" y="160" text-anchor="middle" class="lab">same amount, different place</text>
+        </svg>
+        <div class="thanks">Ask me about the poster!</div>
+      </div>
+    </section>
+
+    <!-- 8 WHY IT MATTERS -->
+    <section class="screen why" data-tapnav>
+      <div class="pad">
+        <h2>Why it <span style="color:var(--pink)">matters</span></h2>
+        <div class="card"><div class="big">7.4 million</div>
+          <p>Americans age 65 and older are living with Alzheimer’s (2026 estimate). That is about 1 in 9 people in that age group.</p>
+          <a class="src" href="https://www.alz.org/alzheimers-dementia/facts-figures" target="_blank" rel="noopener">Source: Alzheimer’s Association, Facts and Figures ↗</a></div>
+        <div class="card"><div class="big">1 in 3</div>
+          <p>older Americans dies with Alzheimer’s or another dementia.</p>
+          <a class="src" href="https://www.alz.org/alzheimers-dementia/facts-figures" target="_blank" rel="noopener">Source: Alzheimer’s Association, Facts and Figures ↗</a></div>
+        <div class="card"><div class="big sm">Tangles track symptoms</div>
+          <p>Tau builds up into tangles inside neurons. In autopsy studies, tangles line up with how bad memory and thinking problems were more closely than amyloid plaques do.</p>
+          <a class="src" href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2692822/" target="_blank" rel="noopener">Source: Nelson, Braak &amp; Markesbery, 2009 ↗</a></div>
+      </div>
+    </section>
+
+    <!-- 9 QUIZ -->
+    <section class="screen quiz" aria-label="Quick quiz">
+      <div class="pad" id="quiz"></div>
+    </section>
+
+    <!-- 10 ABOUT -->
+    <section class="screen about" aria-label="About and learn more">
+      <div class="pad">
+        <h2>About &amp; learn more</h2>
+        <div class="card">
+          <div class="me"><div class="avatar" aria-hidden="true">JT</div>
+            <div><div class="nm">Jack Tiller</div>
+              <div class="rl">MD-PhD student<br>University of Texas Medical Branch (UTMB)</div></div></div>
+          <p style="margin-top:10px">Kayed lab (Dr. Rakez Kayed). I study how the brain protein tau behaves at the nuclear pore in Alzheimer’s research.</p>
+        </div>
+        <a class="clink" href="https://www.linkedin.com/in/jacktiller/" target="_blank" rel="noopener">
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.23 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.46c.98 0 1.77-.77 1.77-1.73V1.73C24 .77 23.21 0 22.23 0z"/></svg></span>
+          <span class="txt"><b>LinkedIn</b><span>linkedin.com/in/jacktiller</span></span>
+        </a>
+        <a class="clink" href="mailto:jbtiller@utmb.edu">
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4-8 5L4 8V6l8 5 8-5v2z"/></svg></span>
+          <span class="txt"><b>Email</b><span>jbtiller@utmb.edu</span></span>
+        </a>
+        <a class="clink" href="https://github.com/jacktiller" target="_blank" rel="noopener">
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 .3A12 12 0 0 0 8.2 23.7c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.8-1.3-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.6.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.6.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.7-2.8 5.7-5.5 6 .4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3z"/></svg></span>
+          <span class="txt"><b>GitHub</b><span>github.com/jacktiller</span></span>
+        </a>
+        <a class="rd" href="https://alz-journals.onlinelibrary.wiley.com/doi/10.1002/alz.71657" target="_blank" rel="noopener">
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1.5V8h4.5L14 3.5zM8 12h8v1.6H8V12zm0 3.2h8v1.6H8v-1.6z"/></svg></span>
+          <span class="txt"><b>Our review: Nuclear dysfunction in aging and neurodegeneration</b><span>Aday, Tiller, et al., 2026. Alzheimer’s &amp; Dementia 22(7):e71657</span></span>
+        </a>
+        <div class="note" style="margin-top:10px">Links open in your browser and need internet. A simplified cartoon, not medical advice.</div>
+        <div class="acts"><button class="btn primary" id="again">↺ Start over</button></div>
+        <div class="thanks" style="text-align:center;margin-top:12px">Thanks for stopping by!</div>
+      </div>
+    </section>
+  </main>
+  <div class="hint" id="hint">Tap the right side or swipe to go on</div>
+  <footer>
+    <button class="btn ghost" id="back" aria-label="Back">◀ Back</button>
+    <button class="btn primary" id="next" aria-label="Next">Next ▶</button>
+  </footer>
+</div>
+
+<script>
+"use strict";
+const Q=new URLSearchParams(location.search);
+const SHOT=Q.has("shot");if(SHOT)document.documentElement.classList.add("shot");
+const NS="http://www.w3.org/2000/svg";
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+
+/* ---------- cartoons ---------- */
+function buildMT(g){for(let row=0;row<3;row++){const n=row%2?12:13;for(let i=0;i<n;i++){
+  el("circle",{cx:14+i*28+(row%2)*14,cy:300+row*28,r:13,fill:(i+row)%2?"#3a5a9a":"#4f78c4"},g);}}}
+function buildTaus(g,withP){[[95,"t1"],[265,"t2"]].forEach(([x0,cls])=>{
+  const o=el("g",{transform:`translate(${x0},272)`},g);const w=el("g",{class:"tauW "+cls},o);
+  el("path",{class:"tauS",d:"M-75,-8 C-56,-26 -44,12 -25,0 S6,-12 25,0 S56,12 75,-8"},w);
+  el("path",{class:"tauGrip",d:"M-25,0 S6,-12 25,0",opacity:.9},w);
+  if(withP)[-17,16].forEach(px=>{const p=el("g",{class:"phos"},w);el("circle",{cx:px,cy:-17,r:12},p);el("text",{x:px,y:-12},p).textContent="P";});});}
+function buildNeuron(svg,sick){svg.innerHTML="";const cx=180,cy=222;
+  const dg=el("g",{class:"dend"},svg);
+  [[-150,150],[-110,135],[-70,125],[-30,160],[25,155],[70,125],[115,135],[155,150]].forEach(([a,L])=>{
+    const r=a*Math.PI/180,ex=cx+Math.cos(r)*L,ey=cy+Math.sin(r)*L*1.2;
+    const mx=cx+Math.cos(r)*L*.7,my=cy+Math.sin(r)*L*.7*1.2;
+    el("path",{d:`M${cx},${cy} Q${mx+10},${my-10} ${ex},${ey}`,stroke:"#6a5aa8","stroke-width":9,fill:"none","stroke-linecap":"round"},dg);
+    const bx=mx+Math.cos(r+.7)*55,by=my+Math.sin(r+.7)*52;
+    el("path",{d:`M${mx},${my} L${bx},${by}`,stroke:"#6a5aa8","stroke-width":5,fill:"none","stroke-linecap":"round"},dg);
+    el("circle",{class:"syn",cx:ex,cy:ey,r:8},svg);el("circle",{class:"syn",cx:bx,cy:by,r:6},svg);});
+  el("ellipse",{cx,cy,rx:84,ry:92,fill:"#2a2350",stroke:"#8c79d8","stroke-width":4},svg);
+  el("circle",{cx,cy,r:52,fill:"#14283a",stroke:"#7ddc8a","stroke-width":6},svg);
+  el("path",{class:"dnaW",d:`M${cx-37},${cy-11} c8,-14 16,14 25,0 s16,14 25,0 s16,14 25,0 M${cx-37},${cy+14} c8,-14 16,14 25,0 s16,14 25,0 s16,14 25,0`,fill:"none",stroke:"#f2cf6b","stroke-width":3.5,"stroke-linecap":"round",opacity:.85},svg);
+  if(sick){const b=el("g",{class:"dnaB",stroke:"#f2cf6b","stroke-width":3.5,"stroke-linecap":"round",fill:"none"},svg);
+    [[-35,-11,-18,-17],[-8,-6,6,-14],[17,-18,32,-8],[-37,14,-24,21],[-12,11,0,18],[14,21,28,12]].forEach(([a,b1,c,d])=>el("path",{d:`M${cx+a},${cy+b1} L${cx+c},${cy+d}`},b));}
+  [0,45,90,135,180,225,270,315].forEach((a,i)=>{const r=a*Math.PI/180,px=cx+Math.cos(r)*52,py=cy+Math.sin(r)*52;
+    el("circle",{cx:px,cy:py,r:7,fill:"#0b1220",stroke:sick?"#f0564a":"#7ddc8a","stroke-width":2.5},svg);
+    if(sick&&i%2===0){const p=el("circle",{class:"plug",cx:px,cy:py,r:8.5,fill:"#b39cff"},svg);p.style.transitionDelay=(.2+i*.08)+"s";}});
+  const t=(x,y,txt,cls,col,anchor="middle")=>{el("text",{x,y,"text-anchor":anchor,class:"lab halo "+cls,style:`fill:${col}`},svg).textContent=txt;};
+  if(sick){const lg=el("g",{class:"leak",fill:"#f2cf6b"},svg);
+    [[10,5.5],[28,5],[46,4.5],[66,4],[86,3.5]].forEach(([d,r],i)=>{const c=el("circle",{cx:cx+84+d,cy:cy-4+(i%2?10:-6),r},lg);c.style.transitionDelay=(1+i*.15)+"s";});
+    t(cx,28,"pores jammed","tag tag1","#f0564a");t(346,cy+44,"leaking","tag tag2","#f2cf6b","end");t(cx,430,"connections fade","tag tag3","#a9b6cc");
+  }else{t(cx,28,"nucleus (holds the DNA)","","#a9b6cc");t(cx,430,"connections","","#f2cf6b");}
+}
+buildNeuron(document.getElementById("neuron1"),false);buildNeuron(document.getElementById("neuron2"),true);
+buildMT(document.getElementById("mt1"));buildMT(document.getElementById("mt2"));
+buildTaus(document.querySelector(".s1 .taus"),false);buildTaus(document.querySelector(".s2 .taus"),true);
+
+/* ---------- quiz ---------- */
+const QUIZ=[
+ {q:"What does tau normally do in a brain cell?",o:["It makes energy for the cell","It holds microtubules (the cell’s tracks) together","It copies the DNA"],a:1,
+  yes:"Yes! Tau helps hold the microtubule tracks together.",no:"Not quite. Tau’s usual job is to hold the microtubule tracks together."},
+ {q:"What happens when phosphates get added to tau?",o:["Tau lets go of the microtubule","Tau grips the microtubule tighter","Nothing changes"],a:0,
+  yes:"Right! Phosphate tags make tau let go.",no:"Not quite. Phosphate tags make tau let go of the microtubule."},
+ {q:"Tau and Nup98 are both positive, and like charges repel. So what else seems to matter for sticking?",o:["Only the total amount of charge","The color of the protein","Where the charge sits"],a:2,
+  yes:"Exactly! Location matters, not just the amount of charge.",no:"Close! It’s where the charge sits, not just how much there is."}
+];
+const QS={i:0,score:0,answered:false,done:false};
+const quizEl=document.getElementById("quiz");
+function renderQuiz(){
+  quizEl.innerHTML="";const D=(h)=>{const d=document.createElement("div");d.innerHTML=h;return d;};
+  if(QS.done){
+    const msg=QS.score===3?"Perfect! You’ve got the whole story.":QS.score===2?"Nice work!":"Good try! The story is worth another look.";
+    quizEl.appendChild(D(`<h2>Quick <span style="color:var(--pink)">quiz</span></h2><div class="card" style="text-align:center"><div class="muted" style="font-size:16px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">Your score</div><div class="score">${QS.score} / ${QUIZ.length}</div><p style="font-size:19px;font-weight:700;color:var(--ink)">${msg}</p></div>`));
+    const a=D(`<div class="acts"><button class="btn" id="qretry">↺ Try again</button><button class="btn primary" id="qnext">About me ▶</button></div>`);quizEl.appendChild(a);
+    a.querySelector("#qretry").onclick=e=>{e.stopPropagation();Object.assign(QS,{i:0,score:0,answered:false,done:false});renderQuiz();updateNav();};
+    a.querySelector("#qnext").onclick=e=>{e.stopPropagation();go(cur+1);};
+    return;}
+  const q=QUIZ[QS.i];
+  quizEl.appendChild(D(`<div class="qtop"><span>Quick quiz</span><span>${QS.i+1} of ${QUIZ.length}</span></div><div class="qq">${q.q}</div>`));
+  const btns=[];
+  q.o.forEach((t,k)=>{const b=document.createElement("button");b.className="opt";b.textContent=t;btns.push(b);quizEl.appendChild(b);
+    b.onclick=e=>{e.stopPropagation();if(QS.answered)return;QS.answered=true;const ok=k===q.a;if(ok)QS.score++;
+      btns.forEach((x,j)=>{x.disabled=true;if(j===q.a)x.classList.add("right");else if(j===k)x.classList.add("wrong");else x.classList.add("faded");});
+      fb.className="fb show "+(ok?"good":"try");fb.textContent=(ok?"✓ ":"")+(ok?q.yes:q.no);nb.style.display="inline-flex";updateNav();
+      if(!SHOT)nb.scrollIntoView({block:"nearest",behavior:"smooth"});};});
+  const fb=document.createElement("div");fb.className="fb";fb.setAttribute("aria-live","polite");quizEl.appendChild(fb);
+  const nb=document.createElement("button");nb.className="btn primary";nb.style.cssText="display:none;width:100%;margin-top:12px";nb.textContent=QS.i===QUIZ.length-1?"See my score ▶":"Next question ▶";quizEl.appendChild(nb);
+  nb.onclick=e=>{e.stopPropagation();if(QS.i===QUIZ.length-1)QS.done=true;else QS.i++;QS.answered=false;renderQuiz();updateNav();quizEl.parentElement.scrollTop=0;};
+}
+
+/* ---------- navigation ---------- */
+const SCREENS=[...document.querySelectorAll(".screen")];
+const LAST=SCREENS.length-1, STORY_END=7, QUIZ_I=9;
+const appEl=document.getElementById("app"),barsEl=document.getElementById("bars"),countEl=document.getElementById("count");
+const nextB=document.getElementById("next"),backB=document.getElementById("back"),hintEl=document.getElementById("hint");
+let cur=0,beat=0,hintT=null,hintShown=false;
+for(let i=0;i<LAST;i++){const b=document.createElement("div");b.className="bar";barsEl.appendChild(b);}
+function flush(sec){void sec.offsetWidth;const c=sec.querySelector("svg *");if(c)getComputedStyle(c).transform;}
+function hardReset(sec){sec._tok=(sec._tok||0)+1;sec.classList.add("resetting");sec.classList.remove("play","beat2");flush(sec);}
+function endReset(sec){sec.classList.remove("resetting");flush(sec);}
+function replay(sec,after){hardReset(sec);const tok=sec._tok;
+  if(SHOT){endReset(sec);sec.classList.add("play");after&&after();return;}
+  requestAnimationFrame(()=>{if(sec._tok!==tok)return;endReset(sec);
+    requestAnimationFrame(()=>{if(sec._tok!==tok)return;sec.classList.add("play");after&&after();});});}
+function resetOthers(except){SCREENS.forEach(s=>{if(s===except)return;hardReset(s);endReset(s);});}
+function updateNav(){
+  appEl.classList.toggle("chrome-off",cur===0);
+  countEl.textContent=cur>0?`${cur} / ${LAST}`:"";
+  [...barsEl.children].forEach((b,i)=>{b.className="bar"+(i+1===cur?" on":i+1<cur?" done":"");});
+  backB.disabled=cur===0;
+  const lbl=cur===STORY_END?"Why it matters ▶":cur===QUIZ_I&&!QS.done?"Skip quiz ▶":"Next ▶";
+  nextB.textContent=lbl;nextB.style.visibility=cur===LAST?"hidden":"visible";
+  }
+function showHint(){hintEl.classList.remove("show");nextB.classList.remove("pulse");clearTimeout(hintT);
+  if(cur===1&&!hintShown){hintT=setTimeout(()=>{hintEl.classList.add("show");nextB.classList.add("pulse");hintShown=true;
+    setTimeout(()=>{hintEl.classList.remove("show");nextB.classList.remove("pulse");},5000);},1800);}}
+function go(i,fromBack){i=Math.max(0,Math.min(LAST,i));cur=i;
+  SCREENS.forEach((s,j)=>{s.classList.toggle("on",j===i);s.classList.toggle("left",j<i);});
+  const sec=SCREENS[i];sec.scrollTop=0;
+  const isS4=sec.classList.contains("s4");beat=isS4&&fromBack?1:0;
+  replay(sec,()=>{if(isS4)sec.classList.toggle("beat2",beat===1);});
+  setTimeout(()=>resetOthers(SCREENS[cur]),450);
+  updateNav();showHint();}
+function setBeat(b){beat=b;const sec=SCREENS[cur];if(sec.classList.contains("play"))sec.classList.toggle("beat2",b===1);}
+function step(d){const sec=SCREENS[cur];
+  if(sec.classList.contains("s4")){if(d>0&&beat===0){setBeat(1);return;}if(d<0&&beat===1){setBeat(0);return;}}
+  if(cur===0&&d<0)return;
+  go(cur+d,d<0);}
+nextB.onclick=e=>{e.stopPropagation();step(1);};
+backB.onclick=e=>{e.stopPropagation();step(-1);};
+document.getElementById("start").onclick=e=>{e.stopPropagation();go(1);};
+document.getElementById("again").onclick=e=>{e.stopPropagation();Object.assign(QS,{i:0,score:0,answered:false,done:false});renderQuiz();go(0);};
+/* tap zones on story screens: left 40% = back, right 60% = forward. Buttons and links are ignored. */
+let lastSwipe=0;
+SCREENS.forEach(s=>{if(s.hasAttribute("data-tapnav"))s.addEventListener("click",e=>{
+  if(!s.classList.contains("on")||Date.now()-lastSwipe<500)return;
+  if(e.target.closest("button,a"))return;
+  const r=document.getElementById("main").getBoundingClientRect();
+  step((e.clientX-r.left)<r.width*0.4?-1:1);});});
+let sx=null,sy=null;const mainEl=document.getElementById("main");
+mainEl.addEventListener("touchstart",e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+mainEl.addEventListener("touchend",e=>{if(sx===null)return;const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
+  if(Math.abs(dx)>50&&Math.abs(dx)>1.6*Math.abs(dy)){lastSwipe=Date.now();step(dx<0?1:-1);}sx=null;},{passive:true});
+document.addEventListener("keydown",e=>{if(e.target.closest&&e.target.closest("button,a"))if(e.key===" "||e.key==="Enter")return;
+  if(e.key==="ArrowRight")step(1);if(e.key==="ArrowLeft")step(-1);});
+
+/* ---------- init ---------- */
+renderQuiz();
+/* test URLs: ?s=0..10 jumps to a screen (&beat=2 for the second charge beat, &shot freezes animations,
+   &qi=0..2 and &qa=0..2 preview a quiz question/answer, &qdone=N preview the score) */
+{const s=Q.has("s")?+Q.get("s"):0;go(s);
+ if(Q.get("beat")==="2")setBeat(1);
+ if(Q.has("qdone")){Object.assign(QS,{done:true,score:+Q.get("qdone")});renderQuiz();updateNav();}
+ else if(Q.has("qi")){QS.i=+Q.get("qi");renderQuiz();if(Q.has("qa")){const o=quizEl.querySelectorAll(".opt");o[+Q.get("qa")].click();}}}
+/* offline: register the service worker (needs https or localhost; skipped for file://) */
+if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost"||location.hostname==="127.0.0.1")){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));}
+</script>
+</body>
+</html>
